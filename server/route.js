@@ -77,12 +77,10 @@ Route = class extends SharedRoute {
             self.options.action(routeContext.params, routeContext.queryParams);
           }
 
-          if (self.options.getMetaTags) {
-            const tags = self.options.getMetaTags();
-            Object.keys(tags).forEach(tagName => {
-              ssrContext.addToHead('<meta property="' + tagName + '" content="' + tags[tagName] + '">');
-            });
-          }
+          let metaTags = (self.options.getMetaTags && self.options.getMetaTags()) || self.defaultMetaTags || {};
+          Object.keys(metaTags).forEach(tagName => {
+            ssrContext.addToHead('<meta property="' + tagName + '" content="' + metaTags[tagName] + '">');
+          });
         } catch (ex) {
           logger.error(`Error when doing SSR. path:${req.url}: ${ex.message}`);
           logger.error(ex.stack);
