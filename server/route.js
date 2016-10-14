@@ -77,9 +77,15 @@ Route = class extends SharedRoute {
             self.options.action(routeContext.params, routeContext.queryParams);
           }
 
-          let metaTags = (self.options.getMetaTags && self.options.getMetaTags()) || self.defaultMetaTags || {};
-          Object.keys(metaTags).forEach(tagName => {
+          const metaTags = (self.options.getMetaTags && self.options.getMetaTags() || {});
+          const metaTagNames = Object.keys(metaTags);
+          metaTagNames.forEach(tagName => {
             ssrContext.addToHead('<meta property="' + tagName + '" content="' + metaTags[tagName] + '">');
+          });
+          const defaultMetaTags = self.defaultMetaTags || {};
+          Object.keys(metaTags).forEach(tagName => {
+            if (metaTagNames.indexOf(tagName) !== -1) { return; }
+            ssrContext.addToHead('<meta property="' + tagName + '" content="' + defaultMetaTags[tagName] + '">');
           });
         } catch (ex) {
           logger.error(`Error when doing SSR. path:${req.url}: ${ex.message}`);
