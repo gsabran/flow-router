@@ -53,6 +53,29 @@ With this, FlowRouter will cache pages and clear them after 10 seconds.
 
 **This is a smart cache and once your DDP connection sends actual data, cache will get invalidated locally.**
 
+## Meta tags
+
+You can directly set metatags that will be added on the server as so:
+
+```js
+FlowRouter.route('/path', {
+  name: 'someRoute',
+  getMetaTags: () => ({
+    description: 'My cool webpage'
+    'og:image': 'someImageUrl',
+  }),
+  ...
+});
+```
+
+and set default metatags for that will be used if not overwritten as:
+
+```js
+FlowRouter.defaultMetaTags = {
+  'og:title': 'My cool website',
+};
+```
+
 ## Defer Script Loading
 
 In a normal Meteor app we need to load 500KB - 2MB JavaScript and run those JavaScript before the browser start to render anything. So, JavaScript blocks the rendering.
