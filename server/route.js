@@ -83,7 +83,7 @@ Route = class extends SharedRoute {
             ssrContext.addToHead('<meta property="' + tagName + '" content="' + metaTags[tagName] + '">');
           });
           const defaultMetaTags = FlowRouter.defaultMetaTags || {};
-          Object.keys(metaTags).forEach(tagName => {
+          Object.keys(defaultMetaTags).forEach(tagName => {
             if (metaTagNames.indexOf(tagName) !== -1) { return; }
             ssrContext.addToHead('<meta property="' + tagName + '" content="' + defaultMetaTags[tagName] + '">');
           });
