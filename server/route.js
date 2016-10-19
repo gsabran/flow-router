@@ -77,16 +77,27 @@ Route = class extends SharedRoute {
             self.options.action(routeContext.params, routeContext.queryParams);
           }
 
-          const metaTags = (self.options.getMetaTags && self.options.getMetaTags() || {});
+          const headTags = (self.options.getHeadTags && self.options.getHeadTags() || {});
+          const defaultHeadTags = FlowRouter.defaultHeadTags || {};
+
+          // meta tags
+          const metaTags = headTags.meta || {};
           const metaTagNames = Object.keys(metaTags);
           metaTagNames.forEach(tagName => {
             ssrContext.addToHead('<meta property="' + tagName + '" content="' + metaTags[tagName] + '">');
           });
-          const defaultMetaTags = FlowRouter.defaultMetaTags || {};
+          const defaultMetaTags = defaultHeadTags.meta || {};
           Object.keys(defaultMetaTags).forEach(tagName => {
             if (metaTagNames.indexOf(tagName) !== -1) { return; }
             ssrContext.addToHead('<meta property="' + tagName + '" content="' + defaultMetaTags[tagName] + '">');
           });
+          
+          // title
+          const title = headTags.title || defaultHeadTags.title;
+          if (title) {
+            ssrContext.addToHead('<title>' + title + '</title>');
+          }
+
         } catch (ex) {
           logger.error(`Error when doing SSR. path:${req.url}: ${ex.message}`);
           logger.error(ex.stack);

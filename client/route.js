@@ -15,6 +15,13 @@ Route = class extends SharedRoute {
   }
 
   callAction(current) {
+
+    const title = (this.options.getHeadTags && this.options.getHeadTags().title) ||
+      (FlowRouter.defaultHeadTags && FlowRouter.defaultHeadTags.title);
+    if (title) {
+      document.title = title;
+    }
+    
     this._action(current.params, current.queryParams);
   }
 };

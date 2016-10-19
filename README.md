@@ -55,14 +55,17 @@ With this, FlowRouter will cache pages and clear them after 10 seconds.
 
 ## Meta tags
 
-You can directly set metatags that will be added on the server as so:
+You can directly set metatags / title that will be added on the server as so:
 
 ```js
 FlowRouter.route('/path', {
   name: 'someRoute',
-  getMetaTags: () => ({
-    description: 'My cool webpage'
-    'og:image': 'someImageUrl',
+  getHeadTags: () => ({
+    meta: {
+      description: 'My cool webpage'
+      'og:image': 'someImageUrl',
+    },
+    title: 'my website',
   }),
   ...
 });
