@@ -12,8 +12,6 @@ Route = class extends SharedRoute {
   _init() {
     const cookieParser = require('cookie-parser');
     Picker.middleware(cookieParser());
-    // process null subscriptions with FR support
-    Picker.middleware(FastRender.handleOnAllRoutes);
 
     const route = FlowRouter.basePath + this.pathDef;
     Picker.route(route, this._handleRoute.bind(this));
@@ -23,25 +21,26 @@ Route = class extends SharedRoute {
     if (!this._isHtmlPage(req.url)) {
       return next();
     }
+    FastRender.handleOnAllRoutes(req, res, () => {
+      // This userId will be useful in the at the later on when
+      // it's time to cache the page.
+      // Normally, we can't access `Meteor.userId()` outside of a method
+      // But here, we could do it because we call `FastRender.handleOnAllRoutes`.
+      // It creates a FastRender context and assign it for the current fiber.
+      req.__userId = Meteor.userId();
+      const cachedPage = this._getCachedPage(req.url, req.__userId);
+      if (cachedPage) {
+        return this._processFromCache(cachedPage, res, next);
+      }
 
-    // This userId will be useful in the at the later on when
-    // it's time to cache the page.
-    // Normally, we can't access `Meteor.userId()` outside of a method
-    // But here, we could do it because we call `FastRender.handleOnAllRoutes`.
-    // It creates a FastRender context and assign it for the current fiber.
-    req.__userId = Meteor.userId();
-    const cachedPage = this._getCachedPage(req.url, req.__userId);
-    if (cachedPage) {
-      return this._processFromCache(cachedPage, res, next);
-    }
-
-    // Here we need to processFromSsr,
-    // but also we need to process with FastRender as well.
-    // That's why we bind processFromSsr and pass args as below.
-    // It does not get any arguments from FastRender.
-    // FastRender just trigger the following handler and do it's job
-    const processFromSsr = this._processFromSsr.bind(this, params, req, res);
-    FastRender.handleRoute(processFromSsr, params, req, res, next);
+      // Here we need to processFromSsr,
+      // but also we need to process with FastRender as well.
+      // That's why we bind processFromSsr and pass args as below.
+      // It does not get any arguments from FastRender.
+      // FastRender just trigger the following handler and do it's job
+      const processFromSsr = this._processFromSsr.bind(this, params, req, res);
+      FastRender.handleRoute(processFromSsr, params, req, res, next);
+    });
   }
 
   _processFromCache(pageInfo, res, next) {
