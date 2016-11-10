@@ -49,6 +49,8 @@ if(Meteor.isServer) {
 
 With this, FlowRouter will cache pages and clear them after 10 seconds.
 
+The caching is based on the url, the user id, and an optional key that you can set by implementing the method `getCacheKey(params, req) -> string` on your route.
+
 > By default, page cache is **turned off**.
 
 **This is a smart cache and once your DDP connection sends actual data, cache will get invalidated locally.**

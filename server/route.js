@@ -28,7 +28,8 @@ Route = class extends SharedRoute {
       // But here, we could do it because we call `FastRender.handleOnAllRoutes`.
       // It creates a FastRender context and assign it for the current fiber.
       req.__userId = Meteor.userId();
-      const cachedPage = this._getCachedPage(req.url, req.__userId);
+      const cacheKey = (this.getCacheKey && this.getCacheKey(params, req)) || 'default';
+      const cachedPage = this._getCachedPage(req.url, req.__userId, cacheKey);
       if (cachedPage) {
         return this._processFromCache(cachedPage, res, next);
       }
@@ -73,7 +74,7 @@ Route = class extends SharedRoute {
           }
 
           if (self.options.action) {
-            self.options.action(routeContext.params, routeContext.queryParams);
+            self.options.action(routeContext.params, routeContext.queryParams, req);
           }
 
           const headTags = (self.options.getHeadTags && self.options.getHeadTags() || {});
@@ -130,7 +131,8 @@ Route = class extends SharedRoute {
             frData: InjectData.getData(res, 'fast-render-data'),
             html: data
           };
-          self._cachePage(req.url, req.__userId, pageInfo, self._router.pageCacheTimeout);
+          const cacheKey = (self.getCacheKey && self.getCacheKey(params, req)) || 'default';
+          self._cachePage(req.url, req.__userId, cacheKey, pageInfo, self._router.pageCacheTimeout);
         }
       }
 
@@ -190,19 +192,19 @@ Route = class extends SharedRoute {
     return false;
   }
 
-  _getCachedPage(url, userId) {
-    const cacheInfo = {url, userId};
-    const cacheKey = this._getCacheKey(cacheInfo);
-    const info = this._cache[cacheKey];
+  _getCachedPage(url, userId, cacheKey) {
+    const cacheInfo = {url, userId, cacheKey};
+    const key = this._getCacheKey(cacheInfo);
+    const info = this._cache[key];
     if (info) {
       return info.data;
     }
   }
 
-  _cachePage(url, userId, data, timeout) {
-    const cacheInfo = {url, userId};
-    const cacheKey = this._getCacheKey(cacheInfo);
-    const existingInfo = this._cache[cacheKey];
+  _cachePage(url, userId, cacheKey, data, timeout) {
+    const cacheInfo = {url, userId, cacheKey};
+    const key = this._getCacheKey(cacheInfo);
+    const existingInfo = this._cache[key];
     if (existingInfo) {
       // Sometimes, it's possible get this called multiple times
       // due to race conditions. So, in that case, simply discard
@@ -213,14 +215,14 @@ Route = class extends SharedRoute {
     const info = {
       data: data,
       timeoutHandle: setTimeout(() => {
-        delete this._cache[cacheKey];
+        delete this._cache[key];
       }, timeout)
     };
 
-    this._cache[cacheKey] = info;
+    this._cache[key] = info;
   }
 
-  _getCacheKey({userId = '', url}) {
-    return `${userId}::${url}`;
+  _getCacheKey({userId = '', url, cacheKey}) {
+    return `${userId}::${url}::${cacheKey}`;
   }
 };
