@@ -28,7 +28,7 @@ Route = class extends SharedRoute {
       // But here, we could do it because we call `FastRender.handleOnAllRoutes`.
       // It creates a FastRender context and assign it for the current fiber.
       req.__userId = Meteor.userId();
-      const cacheKey = (this.getCacheKey && this.getCacheKey(params, req)) || 'default';
+      const cacheKey = (this.options && this.options.getCacheKey && this.options.getCacheKey(params, req)) || 'default';
       const cachedPage = this._getCachedPage(req.url, req.__userId, cacheKey);
       if (cachedPage && false) {
         return this._processFromCache(cachedPage, res, next);
@@ -78,7 +78,6 @@ Route = class extends SharedRoute {
           }
 
           const headTags = (self.options.getHeadTags && self.options.getHeadTags() || {});
-          console.log('custom head tags', headTags);
           const defaultHeadTags = FlowRouter.defaultHeadTags || {};
 
           // meta tags
@@ -136,7 +135,6 @@ Route = class extends SharedRoute {
           self._cachePage(req.url, req.__userId, cacheKey, pageInfo, self._router.pageCacheTimeout);
         }
       }
-      console.log('data', data.split('\n').filter(l => l.indexOf('<meta property') !== -1));
       originalWrite.call(this, data);
     };
   }
@@ -196,7 +194,6 @@ Route = class extends SharedRoute {
   _getCachedPage(url, userId, cacheKey) {
     const cacheInfo = {url, userId, cacheKey};
     const key = this._getCacheKey(cacheInfo);
-    console.log('cached key', key);
     const info = this._cache[key];
     if (info) {
       return info.data;
